@@ -1,1 +1,24 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# PyCharm / IntelliJ IDEA specific
 .idea/
+
+# macOS specific
+.DS_Store
+
+# Windows specific
+Thumbs.db
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+
+# Virtual Environment
+venv/
