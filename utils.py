@@ -31,3 +31,14 @@ def get_df_roadshow(df: pd.DataFrame) -> pd.DataFrame:
     df_roadshow = df_temp_sorted.copy()
 
     return df_roadshow
+
+
+# print na rate of a df
+def print_na_rate(df: pd.DataFrame) -> None:
+    """
+    Print the na rate of a DataFrame
+    :param df: the DataFrame
+    :return: None
+    """
+    print('The na rate of the DataFrame is:')
+    print(df.isna().sum() / len(df))
