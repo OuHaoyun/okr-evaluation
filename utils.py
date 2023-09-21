@@ -25,7 +25,34 @@ def treat_empty_xuhao(df: pd.DataFrame) -> pd.DataFrame:
             df.loc[:, '序号'] = df['序号'].fillna(method='ffill')
     return df
 
-def get_df_roadshow(df: pd.DataFrame) -> pd.DataFrame:
+def get_sales_name_list(df: pd.DataFrame) -> list:
+    """
+    Get the sales name list
+    :param df: the DataFrame of the salesperson sheet
+    :return: the sales name list
+    """
+    sales_name_list = df['员工姓名'].tolist()
+    return sales_name_list
+
+def treat_special_researcher(df: pd.DataFrame, sales_name_list) -> pd.DataFrame:
+    """
+    Treat the special values in '研究员'
+    :param df: the DataFrame
+    :return: the DataFrame with no special values in '研究员'
+    """
+    # special case 1
+    df_temp = df[df['研究员'].str.contains('无研究员') == False].copy()
+    # special case 2
+    df_temp.loc[df_temp['研究员'].str.contains('胡又文'), '研究员'] = '所长'
+    # write ‘所长’ in the column of '所属团队'
+    df_temp.loc[df_temp['研究员'] == '所长', '所属团队'] = '所长'
+    
+    # special case 3
+    df_temp = df_temp[df_temp['研究员'].isin(sales_name_list) == False].copy()
+    return df_temp
+
+
+def get_df_roadshow(df: pd.DataFrame, sales_name_list = None) -> pd.DataFrame:
     """
     Get the roadshow DataFrame
     :param df: the DataFrame of the roadshow sheet
@@ -50,8 +77,8 @@ def get_df_roadshow(df: pd.DataFrame) -> pd.DataFrame:
     df_temp_melted.dropna(subset=['研究员姓名'], inplace=True)
     df_temp_melted.rename(columns={'研究员姓名': '研究员'}, inplace=True)
 
-    # Map team based on researcher name
-    # todo
+    # Treat special values in '研究员'
+    df_temp_melted = treat_special_researcher(df_temp_melted, sales_name_list)
 
     # Sort the DataFrame based on '序号'
     df_temp_sorted = df_temp_melted.sort_values(by='序号')
