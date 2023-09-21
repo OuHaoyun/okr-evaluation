@@ -23,7 +23,18 @@ def treat_empty_xuhao(df: pd.DataFrame) -> pd.DataFrame:
         if pd.isna(df.loc[i, '序号']):
             special_list.append(i)
             df.loc[:, '序号'] = df['序号'].fillna(method='ffill')
-    return df
+
+    # save a df that contains those rows with empty '序号'
+    df_special = df.iloc[special_list, :].copy()
+    df_special.reset_index(drop=True, inplace=True)
+
+    # print special list and special df with a proper heading
+    print('The special list is:')
+    print(special_list)
+    print('The special df is:')
+    print(df_special)
+
+    return df, df_special
 
 def get_sales_name_list(df: pd.DataFrame) -> list:
     """
@@ -67,7 +78,7 @@ def get_df_roadshow(df: pd.DataFrame, sales_name_list = None) -> pd.DataFrame:
     df_temp = df[roadshow_columns].copy()
     df_temp.loc[:, '序号'] = df_temp['序号'].astype(int)
     if df_temp['序号'].isna().sum() > 0:
-        df_temp = treat_empty_xuhao(df_temp)
+        df_temp, df_special = treat_empty_xuhao(df_temp)
     df_temp.loc[:, '客户区域'] = df_temp['客户区域'].fillna(df_temp['客户机构'])
     df_temp.loc[:, '客户分级'] = df_temp['客户分级'].fillna(df_temp['客户机构'])
 
@@ -87,7 +98,7 @@ def get_df_roadshow(df: pd.DataFrame, sales_name_list = None) -> pd.DataFrame:
     # Make a copy of the temp df as the roadshow df
     df_roadshow = df_temp_sorted.copy()
 
-    return df_roadshow
+    return df_roadshow, df_special
 
 
 # print na rate of a df
