@@ -1,6 +1,15 @@
 import pandas as pd
 from constants import SHEET_NAMES
 
+def print_na_rate(df: pd.DataFrame) -> None:
+    """
+    Print the na rate of a DataFrame
+    :param df: the DataFrame
+    :return: None
+    """
+    print('The na rate of the DataFrame is:')
+    print(df.isna().sum() / len(df))
+
 
 def get_researcher_columns(df: pd.DataFrame) -> list:
     """
@@ -13,6 +22,17 @@ def get_researcher_columns(df: pd.DataFrame) -> list:
         if '研究员' in col:
             researcher_columns.append(col)
     return researcher_columns
+
+
+def get_sales_name_list(df: pd.DataFrame) -> list:
+    """
+    Get the sales name list
+    :param df: the DataFrame of the salesperson sheet
+    :return: the sales name list
+    """
+    sales_name_list = df['员工姓名'].tolist()
+    return sales_name_list
+
 
 def treat_empty_xuhao(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -44,16 +64,6 @@ def treat_empty_xuhao(df: pd.DataFrame) -> pd.DataFrame:
 
     return df, df_special
 
-
-
-def get_sales_name_list(df: pd.DataFrame) -> list:
-    """
-    Get the sales name list
-    :param df: the DataFrame of the salesperson sheet
-    :return: the sales name list
-    """
-    sales_name_list = df['员工姓名'].tolist()
-    return sales_name_list
 
 def treat_special_researcher(df: pd.DataFrame, sales_name_list) -> pd.DataFrame:
     """
@@ -110,17 +120,6 @@ def get_df_roadshow(df: pd.DataFrame, sales_name_list = None) -> pd.DataFrame:
     return df_roadshow, df_special
 
 
-# print na rate of a df
-def print_na_rate(df: pd.DataFrame) -> None:
-    """
-    Print the na rate of a DataFrame
-    :param df: the DataFrame
-    :return: None
-    """
-    print('The na rate of the DataFrame is:')
-    print(df.isna().sum() / len(df))
-
-
 def get_df_researcher(df_roadshow):
     # 1. Modify the df_researcher DataFrame structure
     df_researcher = df_roadshow.drop_duplicates(subset='研究员')[['研究员', '所属团队']].reset_index(drop=True)
@@ -136,15 +135,18 @@ def get_df_researcher(df_roadshow):
 
     # 4. Calculate the number of times each researcher served 5A or 4A customers
     filtered_customers = df_roadshow[df_roadshow['客户分级'].isin(['5A', '4A'])]
-    customer_counts = filtered_customers.groupby('研究员').size().reset_index(name='54A服务次数')
+    customer_counts = filtered_customers.groupby('研究员').size().reset_index(name='54A路演次数')
     df_researcher = df_researcher.merge(customer_counts, on='研究员', how='left').fillna(0)
-    df_researcher['54A服务次数'] = df_researcher['54A服务次数'].astype(int)
+    df_researcher['54A路演次数'] = df_researcher['54A路演次数'].astype(int)
 
-    # 5. Aggregating regions for each researcher into a single string (without duplicates)
-    regions_agg = df_roadshow.groupby('研究员')['客户区域'].unique().apply(lambda x: ', '.join(x)).reset_index()
-    df_researcher = df_researcher.merge(regions_agg, on='研究员', how='left')
-    df_researcher.rename(columns={'客户区域': '参与地区'}, inplace=True)
-    
+    # 5. Calculate the number of times each researcher served customers in each region
+    regions_counts = df_roadshow.groupby(['研究员', '客户区域']).size().reset_index(name='count')
+    pivot_regions = regions_counts.pivot(index='研究员', columns='客户区域', values='count').fillna(0).reset_index()
+    df_researcher = df_researcher.merge(pivot_regions, on='研究员', how='left').fillna(0)
+
+    # sort df_researcher by industry
+    df_researcher.sort_values(by='所属团队', inplace=True)
+
     return df_researcher
 
 
@@ -166,7 +168,6 @@ def write_dfs_to_excel(output_path, dfs_dict, engine='openpyxl'):
     with pd.ExcelWriter(output_path, engine=engine) as writer:
         for sheet_name, df in dfs_dict.items():
             df.to_excel(writer, sheet_name=sheet_name, index=False)
-
 
 
 def okr_roadshow_data_pipeline(okr_excel_path, researcher_info_excel_path, salesperson_info_excel_path, output_excel_path):
