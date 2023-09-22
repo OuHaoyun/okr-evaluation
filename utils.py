@@ -1,4 +1,5 @@
 import pandas as pd
+from constants import SHEET_NAMES
 
 
 def get_researcher_columns(df: pd.DataFrame) -> list:
@@ -119,8 +120,6 @@ def print_na_rate(df: pd.DataFrame) -> None:
     print('The na rate of the DataFrame is:')
     print(df.isna().sum() / len(df))
 
-import pandas as pd
-
 
 def get_df_researcher(df_roadshow):
     # 1. Modify the df_researcher DataFrame structure
@@ -167,6 +166,30 @@ def write_dfs_to_excel(output_path, dfs_dict, engine='openpyxl'):
     with pd.ExcelWriter(output_path, engine=engine) as writer:
         for sheet_name, df in dfs_dict.items():
             df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+
+
+def okr_roadshow_data_pipeline(okr_excel_path, researcher_info_excel_path, salesperson_info_excel_path, output_excel_path):
+    """
+    Process a given OKR Excel file and write the results to an output Excel file.
+    
+    Args:
+    - file_path (str): Path to the OKR Excel file to process.
+    """
+    # Read data from Excel files
+    df_okr = pd.read_excel(okr_excel_path, sheet_name='路演', engine='openpyxl')
+    df_researcher_info = pd.read_excel(researcher_info_excel_path, usecols='A:C')
+    df_salespeople_info = pd.read_excel(salesperson_info_excel_path)
+
+    # Process the data
+    sales_name_list = get_sales_name_list(df_salespeople_info)
+    df_roadshow, df_special = get_df_roadshow(df_okr, sales_name_list)
+    df_researcher = get_df_researcher(df_roadshow)
+
+    # write the excel file
+    dfs_dict = {name[3:]: globals()[name] for name in SHEET_NAMES if name in globals()}
+    write_dfs_to_excel(output_excel_path, dfs_dict)
+
 
 
 
