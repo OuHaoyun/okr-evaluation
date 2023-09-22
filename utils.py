@@ -121,6 +121,34 @@ def print_na_rate(df: pd.DataFrame) -> None:
 
 import pandas as pd
 
+
+def get_df_researcher(df_roadshow):
+    # 1. Modify the df_researcher DataFrame structure
+    df_researcher = df_roadshow.drop_duplicates(subset='研究员')[['研究员', '所属团队']].reset_index(drop=True)
+
+    # 2. Calculate the total number of roadshows for each researcher
+    total_roadshows = df_roadshow.groupby('研究员').size().reset_index(name='总路演次数')
+    df_researcher = df_researcher.merge(total_roadshows, on='研究员', how='left')
+
+    # 3. Calculate the number of each type of researcher's roadshow
+    roadshow_counts = df_roadshow.groupby(['研究员', '服务事项']).size().reset_index(name='count')
+    pivot_roadshow = roadshow_counts.pivot(index='研究员', columns='服务事项', values='count').fillna(0).reset_index()
+    df_researcher = df_researcher.merge(pivot_roadshow, on='研究员', how='left').fillna(0)
+
+    # 4. Calculate the number of times each researcher served 5A or 4A customers
+    filtered_customers = df_roadshow[df_roadshow['客户分级'].isin(['5A', '4A'])]
+    customer_counts = filtered_customers.groupby('研究员').size().reset_index(name='54A服务次数')
+    df_researcher = df_researcher.merge(customer_counts, on='研究员', how='left').fillna(0)
+    df_researcher['54A服务次数'] = df_researcher['54A服务次数'].astype(int)
+
+    # 5. Aggregating regions for each researcher into a single string (without duplicates)
+    regions_agg = df_roadshow.groupby('研究员')['客户区域'].unique().apply(lambda x: ', '.join(x)).reset_index()
+    df_researcher = df_researcher.merge(regions_agg, on='研究员', how='left')
+    df_researcher.rename(columns={'客户区域': '参与地区'}, inplace=True)
+    
+    return df_researcher
+
+
 def write_dfs_to_excel(output_path, dfs_dict, engine='openpyxl'):
     """
     Write multiple DataFrames to an Excel file with each DataFrame in a separate sheet.
