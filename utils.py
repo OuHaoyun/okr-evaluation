@@ -19,20 +19,19 @@ def treat_empty_xuhao(df: pd.DataFrame) -> pd.DataFrame:
     :return: the DataFrame with no empty values in '序号'
     """
     special_list = []
-    for i in range(len(df)):
-        if pd.isna(df.loc[i, '序号']):
-            special_list.append(i)
-            df.loc[:, '序号'] = df['序号'].fillna(method='ffill')
+    df_special = pd.DataFrame()
 
-    # save a df that contains those rows with empty '序号'
-    df_special = df.iloc[special_list, :].copy()
-    df_special.reset_index(drop=True, inplace=True)
+    if df['序号'].isna().sum() > 0:
+        for i in range(len(df)):
+            if pd.isna(df.loc[i, '序号']):
+                special_list.append(i)
+                print('The empty value in "序号" is in row {}'.format(i))
+                df.loc[:, '序号'] = df['序号'].fillna(method='ffill')
+        print('The empty value in "序号" is treated.')
 
-    # print special list and special df with a proper heading
-    print('The special list is:')
-    print(special_list)
-    print('The special df is:')
-    print(df_special)
+    if len(special_list) > 0:
+        df_special = df.iloc[special_list, :].copy()
+        df_special.reset_index(drop=True, inplace=True)
 
     return df, df_special
 
@@ -76,9 +75,8 @@ def get_df_roadshow(df: pd.DataFrame, sales_name_list = None) -> pd.DataFrame:
 
     # Read relavant columns and fillna
     df_temp = df[roadshow_columns].copy()
+    df_temp, df_special = treat_empty_xuhao(df_temp)
     df_temp.loc[:, '序号'] = df_temp['序号'].astype(int)
-    if df_temp['序号'].isna().sum() > 0:
-        df_temp, df_special = treat_empty_xuhao(df_temp)
     df_temp.loc[:, '客户区域'] = df_temp['客户区域'].fillna(df_temp['客户机构'])
     df_temp.loc[:, '客户分级'] = df_temp['客户分级'].fillna(df_temp['客户机构'])
 
