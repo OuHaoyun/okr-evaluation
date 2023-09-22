@@ -1,5 +1,6 @@
 import pandas as pd
 
+
 def get_researcher_columns(df: pd.DataFrame) -> list:
     """
     Get the columns contains '研究员'
@@ -117,3 +118,29 @@ def print_na_rate(df: pd.DataFrame) -> None:
     """
     print('The na rate of the DataFrame is:')
     print(df.isna().sum() / len(df))
+
+import pandas as pd
+
+def write_dfs_to_excel(output_path, dfs_dict, engine='openpyxl'):
+    """
+    Write multiple DataFrames to an Excel file with each DataFrame in a separate sheet.
+
+    Parameters:
+    - output_path (str): Path to the output Excel file.
+    - dfs_dict (dict): Dictionary where keys are sheet names and values are DataFrames.
+    - engine (str, optional): Engine to use for writing to Excel. Default is 'openpyxl'.
+
+    Returns:
+    - None
+    """
+    if not dfs_dict:
+        raise ValueError("No DataFrames provided to write to Excel.")
+    
+    with pd.ExcelWriter(output_path, engine=engine) as writer:
+        for sheet_name, df in dfs_dict.items():
+            df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+
+
+
+
