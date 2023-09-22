@@ -21,19 +21,28 @@ def treat_empty_xuhao(df: pd.DataFrame) -> pd.DataFrame:
     special_list = []
     df_special = pd.DataFrame()
 
+    # Check if there are NaN values in '序号'
     if df['序号'].isna().sum() > 0:
-        for i in range(len(df)):
+        for i in range(1, len(df)):  # Start from the second row
             if pd.isna(df.loc[i, '序号']):
-                special_list.append(i)
-                print('The empty value in "序号" is in row {}'.format(i))
-                df.loc[:, '序号'] = df['序号'].fillna(method='ffill')
-        print('The empty value in "序号" is treated.')
+                # Append the current row and the preceding row to the special_list
+                special_list.extend([i-1, i])
 
+        # Remove duplicates from the special_list
+        special_list = list(set(special_list))
+        special_list.sort()
+
+        # Forward fill the '序号' column
+        df.loc[:, '序号'] = df['序号'].fillna(method='ffill')
+
+    # Create a DataFrame with the special cases
     if len(special_list) > 0:
         df_special = df.iloc[special_list, :].copy()
         df_special.reset_index(drop=True, inplace=True)
 
     return df, df_special
+
+
 
 def get_sales_name_list(df: pd.DataFrame) -> list:
     """
