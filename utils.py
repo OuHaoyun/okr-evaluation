@@ -150,18 +150,51 @@ def get_df_researcher(df_roadshow):
     return df_researcher
 
 
-def write_dfs_to_excel(output_path, dfs_dict, engine='openpyxl'):
-    """
-    Write multiple DataFrames to an Excel file with each DataFrame in a separate sheet.
+def read_roadshow_files(okr_excel_path, researcher_info_excel_path, salesperson_info_excel_path):
+    df_okr = pd.read_excel(okr_excel_path, sheet_name='路演', engine='openpyxl')
+    df_salespeople_info = pd.read_excel(salesperson_info_excel_path)
 
-    Parameters:
-    - output_path (str): Path to the output Excel file.
-    - dfs_dict (dict): Dictionary where keys are sheet names and values are DataFrames.
-    - engine (str, optional): Engine to use for writing to Excel. Default is 'openpyxl'.
+    return df_okr, df_salespeople_info
 
-    Returns:
-    - None
+
+def okr_calculation_pipeline(df_okr, df_salespeople_info):
+    sales_name_list = get_sales_name_list(df_salespeople_info)
+    df_roadshow, df_special = get_df_roadshow(df_okr, sales_name_list)
+    df_researcher = get_df_researcher(df_roadshow)
+
+    return df_roadshow, df_researcher, df_special
+
+
+def compose_output_file_name(okr_excel_path):
     """
+    Compose the output file name based on the OKR Excel file name.
+    # retrieve the year and month from the okr_excel_path
+    # compose the output file name
+
+    :param okr_excel_path: the path of the OKR Excel file
+    :return: the output file name
+    """
+    # Get the file name from the OKR Excel file path
+    okr_excel_file_name = okr_excel_path.split('/')[-1]
+    # Get the year and month from the file name
+    year = okr_excel_file_name.split('.')[0]
+    month = okr_excel_file_name.split('.')[1]
+    # Compose the output file name
+    output_file_name = f'okr_roadshow_{year}{month}.xlsx'
+    return output_file_name
+
+
+def write_dfs_to_excel(dfs_dict, okr_excel_path , engine='openpyxl'):
+    """
+    Write DataFrames to Excel
+    :param dfs_dict: the dictionary of DataFrames
+    :param output_path: the output path
+    :param engine: the engine to write Excel
+    :return: None
+    """
+
+    output_path = compose_output_file_name(okr_excel_path)
+
     if not dfs_dict:
         raise ValueError("No DataFrames provided to write to Excel.")
     
@@ -170,26 +203,10 @@ def write_dfs_to_excel(output_path, dfs_dict, engine='openpyxl'):
             df.to_excel(writer, sheet_name=sheet_name, index=False)
 
 
-def okr_roadshow_data_pipeline(okr_excel_path, researcher_info_excel_path, salesperson_info_excel_path, output_excel_path):
-    """
-    Process a given OKR Excel file and write the results to an output Excel file.
-    
-    Args:
-    - file_path (str): Path to the OKR Excel file to process.
-    """
-    # Read data from Excel files
-    df_okr = pd.read_excel(okr_excel_path, sheet_name='路演', engine='openpyxl')
-    df_researcher_info = pd.read_excel(researcher_info_excel_path, usecols='A:C')
-    df_salespeople_info = pd.read_excel(salesperson_info_excel_path)
 
-    # Process the data
-    sales_name_list = get_sales_name_list(df_salespeople_info)
-    df_roadshow, df_special = get_df_roadshow(df_okr, sales_name_list)
-    df_researcher = get_df_researcher(df_roadshow)
 
-    # write the excel file
-    dfs_dict = {name[3:]: globals()[name] for name in SHEET_NAMES if name in globals()}
-    write_dfs_to_excel(output_excel_path, dfs_dict)
+
+
 
 
 
