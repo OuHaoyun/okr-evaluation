@@ -14,5 +14,4 @@ exp_path = '/Users/haoyunou/Desktop/ms-security/研究院绩效考核/exp-data/d
 
 output_excel_path = '/Users/haoyunou/Desktop/ms-security/研究院绩效考核/exp-data/okr_roadshow_202305.xlsx'
 
-SHEET_NAMES = ['df_roadshow', 'df_special', 'df_researcher', 'df_team', 'df_org']
 

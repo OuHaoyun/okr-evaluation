@@ -1,5 +1,5 @@
 import pandas as pd
-from constants import SHEET_NAMES, output_folder_path
+from constants import output_folder_path
 
 def print_na_rate(df: pd.DataFrame) -> None:
     """

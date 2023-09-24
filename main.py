@@ -1,13 +1,10 @@
 import os
 import pandas as pd
-from constants import SHEET_NAMES
 
 
-from constants import data_folder_path, salesperson_info_excel_path, output_folder_path
+from constants import data_folder_path, salesperson_info_excel_path
 from utils import read_roadshow_files, okr_calculation_pipeline, write_dfs_to_excel
 
-
-from constants import SHEET_NAMES
 
 
 
