@@ -1,5 +1,6 @@
 
 data_folder_path = '/Users/haoyunou/Desktop/ms-security/研究院绩效考核/2023Q1&Q2研究院工作量统计/'
+output_folder_path = '/Users/haoyunou/Desktop/ms-security/研究院绩效考核/exp-data/'
 okr_excel_path = '/Users/haoyunou/Desktop/ms-security/研究院绩效考核/2023Q1&Q2研究院工作量统计/2023.5.1-5.31研究院工作量统计0607.xlsx'
 # /Users/haoyunou/Desktop/ms-security/研究院绩效考核/2023Q1&Q2研究院工作量统计/2023.4.1-4.30研究院工作量统计0509-团队补充0608.xlsx
 # /Users/haoyunou/Desktop/ms-security/研究院绩效考核/2023Q1&Q2研究院工作量统计/2023.5.1-5.31研究院工作量统计0607.xlsx
