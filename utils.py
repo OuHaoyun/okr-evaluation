@@ -140,7 +140,8 @@ def get_df_researcher(df_roadshow):
     df_researcher['54A路演次数'] = df_researcher['54A路演次数'].astype(int)
 
     # 5. Calculate the number of times each researcher served customers in each region
-    regions_counts = df_roadshow.groupby(['研究员', '客户区域']).size().reset_index(name='count')
+    regions_counts = df_roadshow[df_roadshow['客户区域'].isin(['北京', '上海', '广深'])]  # Filter for specified regions
+    regions_counts = regions_counts.groupby(['研究员', '客户区域']).size().reset_index(name='count')
     pivot_regions = regions_counts.pivot(index='研究员', columns='客户区域', values='count').fillna(0).reset_index()
     df_researcher = df_researcher.merge(pivot_regions, on='研究员', how='left').fillna(0)
 
