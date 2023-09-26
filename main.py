@@ -29,12 +29,14 @@ def main(data_folder):
             df_okr, df_salespeople_info = read_roadshow_files(file_path, salesperson_info_excel_path)
 
             # calculate the OKR
-            df_roadshow, df_researcher, df_special = okr_calculation_pipeline(df_okr, df_salespeople_info)
+            df_roadshow, df_researcher, df_team, df_org, df_special = okr_calculation_pipeline(df_okr, df_salespeople_info)
 
             dfs_dict = {
                         'roadshow': df_roadshow,
                         'special': df_special,
-                        'researcher': df_researcher
+                        'researcher': df_researcher,
+                        'team': df_team,
+                        'organization': df_org
                         }
     
             # Write the DataFrames to Excel

@@ -150,6 +150,7 @@ def get_df_researcher(df_roadshow):
 
     return df_researcher
 
+
 def get_df_team(df_roadshow):
     # drop duplicates for df_roadshow based on '序号'
     df_unique = df_roadshow.drop_duplicates(subset=['序号'], keep='first')
@@ -175,6 +176,26 @@ def get_df_team(df_roadshow):
     return df_team
 
 
+def get_df_org(df_researcher):
+    df_org = pd.DataFrame()
+
+    # Get the numeric columns by excluding the first two columns
+    numeric_columns = df_researcher.columns[2:]
+
+    # Iterate through the numeric columns of df_researcher
+    for column in numeric_columns:
+        # Sum the column
+        column_sum = df_researcher[column].sum()
+        # Create a new row with the column name and sum, and append it to df_org
+        new_row = pd.DataFrame({'Attribute': [column + '（总计）'], 'Sum': [column_sum]})
+        df_org = pd.concat([df_org, new_row], ignore_index=True)
+
+    # Rename the columns of df_org
+    df_org = df_org.rename(columns={'Attribute': '汇总指标', 'Sum': '合计值'})
+
+    return df_org
+
+
 def read_roadshow_files(okr_excel_path, salesperson_info_excel_path):
     df_okr = pd.read_excel(okr_excel_path, sheet_name='路演', engine='openpyxl')
     df_salespeople_info = pd.read_excel(salesperson_info_excel_path)
@@ -186,8 +207,10 @@ def okr_calculation_pipeline(df_okr, df_salespeople_info):
     sales_name_list = get_sales_name_list(df_salespeople_info)
     df_roadshow, df_special = get_df_roadshow(df_okr, sales_name_list)
     df_researcher = get_df_researcher(df_roadshow)
+    df_team = get_df_team(df_roadshow)
+    df_org = get_df_org(df_researcher)
 
-    return df_roadshow, df_researcher, df_special
+    return df_roadshow, df_researcher, df_team, df_org, df_special
 
 
 def compose_output_file_name(okr_excel_path, output_folder_path):
