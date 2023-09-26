@@ -76,7 +76,7 @@ def treat_special_researcher(df: pd.DataFrame, sales_name_list) -> pd.DataFrame:
     # # special case 2
     # df_temp.loc[df_temp['研究员'].str.contains('胡又文'), '研究员'] = '所长'
     # # write ‘所长’ in the column of '所属团队'
-    # df_temp.loc[df_temp['研究员'] == '所长', '所属团队'] = '所长'
+    df_temp.loc[df_temp['研究员'] == '胡又文', '所属团队'] = '所长'
     
     # special case 3
     df_temp = df_temp[df_temp['研究员'].isin(sales_name_list) == False].copy()
@@ -151,35 +151,28 @@ def get_df_researcher(df_roadshow):
     return df_researcher
 
 def get_df_team(df_roadshow):
-    # 1. Modify the df_team DataFrame structure
-    df_team = df_roadshow.drop_duplicates(subset='所属团队')[['所属团队']].reset_index(drop=True)
+    # drop duplicates for df_roadshow based on '序号'
+    df_unique = df_roadshow.drop_duplicates(subset=['序号'], keep='first')
 
-    # 2. Calculate the total number of roadshows for each team
-    total_roadshows = df_roadshow.groupby('所属团队').size().reset_index(name='总路演次数')
-    df_team = df_team.merge(total_roadshows, on='所属团队', how='left')
+    # Calculate the number of times each team served customers
+    total_roadshows_per_team = df_unique.groupby('所属团队')['序号'].count().reset_index(name='总路演次数')
+    service_counts_per_team = df_unique.groupby(['所属团队', '服务事项']).size().reset_index(name='count')
+    pivot_service_counts = service_counts_per_team.pivot(index='所属团队', columns='服务事项', values='count').fillna(0).astype(int).reset_index()
+    df_team = total_roadshows_per_team.merge(pivot_service_counts, on='所属团队', how='left')
 
-    # 3. Calculate the number of each type of team's roadshow
-    roadshow_counts = df_roadshow.groupby(['所属团队', '服务事项']).size().reset_index(name='count')
-    pivot_roadshow = roadshow_counts.pivot(index='所属团队', columns='服务事项', values='count').fillna(0).reset_index()
-    df_team = df_team.merge(pivot_roadshow, on='所属团队', how='left').fillna(0)
-
-    # 4. Calculate the number of times each team served 5A or 4A customers
-    filtered_customers = df_roadshow[df_roadshow['客户分级'].isin(['5A', '4A'])]
+    # Calculate the number of times each team served 5A or 4A customers
+    filtered_customers = df_unique[df_unique['客户分级'].isin(['5A', '4A'])]
     customer_counts = filtered_customers.groupby('所属团队').size().reset_index(name='54A路演次数')
     df_team = df_team.merge(customer_counts, on='所属团队', how='left').fillna(0)
     df_team['54A路演次数'] = df_team['54A路演次数'].astype(int)
 
-    # 5. Calculate the number of times each team served customers in each region
-    regions_counts = df_roadshow[df_roadshow['客户区域'].isin(['北京', '上海', '广深'])]  # Filter for specified regions
+    # Calculate the number of times each researcher served customers in each region
+    regions_counts = df_unique[df_unique['客户区域'].isin(['北京', '上海', '广深'])] 
     regions_counts = regions_counts.groupby(['所属团队', '客户区域']).size().reset_index(name='count')
     pivot_regions = regions_counts.pivot(index='所属团队', columns='客户区域', values='count').fillna(0).reset_index()
     df_team = df_team.merge(pivot_regions, on='所属团队', how='left').fillna(0)
 
-    # sort df_researcher by industry
-    df_team.sort_values(by='总路演次数', inplace=True)
-
     return df_team
-
 
 
 def read_roadshow_files(okr_excel_path, salesperson_info_excel_path):
