@@ -1,5 +1,7 @@
+import os
+import datetime
 import pandas as pd
-from constants import output_folder_path
+from constants import output_folder_path, txt_folder_path
 
 def print_na_rate(df: pd.DataFrame) -> None:
     """
@@ -213,6 +215,23 @@ def okr_calculation_pipeline(df_okr, df_salespeople_info):
     return df_roadshow, df_researcher, df_team, df_org, df_special
 
 
+def prepare_txt_pipeline(df_researcher, df_team, df_org, okr_excel_path):
+    df_researcher_dict = get_df_dict(df_researcher, ['研究员', '所属团队'], '路演指标', '路演次数')
+    df_team_dict = get_df_dict(df_team, ['所属团队'], '路演指标', '路演次数')
+
+    date = get_period_from_excel_name(okr_excel_path)
+    # Write txts for df_researcher_dict
+    write_dict_to_txts(df_researcher_dict, '研究员绩效', txt_folder_path, date)
+
+    # Write txts for df_team_dict
+    write_dict_to_txts(df_team_dict, '团队绩效', txt_folder_path, date)
+
+    # Write txt for df_org
+    write_df_to_txt(df_org, '研究院绩效', txt_folder_path, date)
+
+    return
+
+
 def compose_output_file_name(okr_excel_path, output_folder_path):
     """
     Compose the output file name based on the OKR Excel file name.
@@ -256,9 +275,47 @@ def write_dfs_to_excel(dfs_dict, okr_excel_path , engine='openpyxl'):
             df.to_excel(writer, sheet_name=sheet_name, index=False)
 
 
+def get_period_from_excel_name(excel_path):
+    """
+    Get the period from the excel name
+    """
+    year = int(excel_path.split('/')[-1].split('.')[0])
+    month = int(excel_path.split('/')[-1].split('.')[1])
+    
+    # Create a datetime object for the first day of the given month
+    date_obj = datetime.datetime(year, month, 1)
 
+    # Format the datetime object as a string in the "YYYY-MM" format
+    year_month_str = date_obj.strftime('%Y-%m')
 
+    return year_month_str
 
+def get_df_dict(df, id_vars, var_name, value_name):
+    df_melt = df.melt(id_vars=id_vars, var_name=var_name, value_name=value_name)
+    df_melt[value_name] = df_melt[value_name].astype(int)
+    df_dict = {i: df_melt[df_melt[var_name] == i] for i in df_melt[var_name].unique()}
+    return df_dict
+
+def clean_file_name(name):
+    return name.replace('/', '-').replace(' ', '_').replace('(', '').replace(')', '')
+
+def write_dict_to_txts(data_dict, performance_type, folder_path, date):
+    for key, value in data_dict.items():
+        cleaned_key = clean_file_name(key)
+        file_name = f'{performance_type}_{cleaned_key}_{date}.txt'
+        file_path = os.path.join(folder_path, file_name)
+        with open(file_path, 'w', encoding='utf-8') as file:
+            # Write the file name (without the .txt extension) as the first line of the text file
+            file.write(file_name.replace('.txt', '') + '\n')
+            file.write(value.to_string(index=False))
+
+def write_df_to_txt(df, performance_type, folder_path, date):
+    file_name = f'{performance_type}_{date}.txt'
+    file_path = os.path.join(folder_path, file_name)
+    with open(file_path, 'w', encoding='utf-8') as file:
+        # Write the file name (without the .txt extension) as the first line of the text file
+        file.write(file_name.replace('.txt', '') + '\n')
+        file.write(df.to_string(index=False))
 
 
 

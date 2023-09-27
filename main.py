@@ -3,7 +3,7 @@ import pandas as pd
 
 
 from constants import data_folder_path, salesperson_info_excel_path
-from utils import read_roadshow_files, okr_calculation_pipeline, write_dfs_to_excel
+from utils import read_roadshow_files, okr_calculation_pipeline, write_dfs_to_excel, prepare_txt_pipeline
 
 
 
@@ -31,16 +31,18 @@ def main(data_folder):
             # calculate the OKR
             df_roadshow, df_researcher, df_team, df_org, df_special = okr_calculation_pipeline(df_okr, df_salespeople_info)
 
-            dfs_dict = {
-                        'roadshow': df_roadshow,
-                        'special': df_special,
-                        'researcher': df_researcher,
-                        'team': df_team,
-                        'organization': df_org
-                        }
+            prepare_txt_pipeline(df_researcher, df_team, df_org, file_path)
+
+            # dfs_dict = {
+            #             'roadshow': df_roadshow,
+            #             'special': df_special,
+            #             'researcher': df_researcher,
+            #             'team': df_team,
+            #             'organization': df_org
+            #             }
     
-            # Write the DataFrames to Excel
-            write_dfs_to_excel(dfs_dict, file_path)
+            # # Write the DataFrames to Excel
+            # write_dfs_to_excel(dfs_dict, file_path)
             
     
 
