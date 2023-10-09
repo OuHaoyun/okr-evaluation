@@ -215,21 +215,7 @@ def okr_calculation_pipeline(df_okr, df_salespeople_info):
     return df_roadshow, df_researcher, df_team, df_org, df_special
 
 
-def prepare_txt_pipeline(df_researcher, df_team, df_org, okr_excel_path):
-    df_researcher_dict = get_df_dict(df_researcher, ['研究员', '所属团队'], '路演指标', '路演次数')
-    df_team_dict = get_df_dict(df_team, ['所属团队'], '路演指标', '路演次数')
 
-    date = get_period_from_excel_name(okr_excel_path)
-    # Write txts for df_researcher_dict
-    write_dict_to_txts(df_researcher_dict, '研究员绩效', txt_folder_path, date)
-
-    # Write txts for df_team_dict
-    write_dict_to_txts(df_team_dict, '团队绩效', txt_folder_path, date)
-
-    # Write txt for df_org
-    write_df_to_txt(df_org, '研究院绩效', txt_folder_path, date)
-
-    return
 
 
 def compose_output_file_name(okr_excel_path, output_folder_path):
@@ -285,8 +271,8 @@ def get_period_from_excel_name(excel_path):
     # Create a datetime object for the first day of the given month
     date_obj = datetime.datetime(year, month, 1)
 
-    # Format the datetime object as a string in the "YYYY-MM" format
-    year_month_str = date_obj.strftime('%Y-%m')
+    # Format the datetime object as a string in the "某年某月" format
+    year_month_str = date_obj.strftime('%Y年%m月')
 
     return year_month_str
 
@@ -319,7 +305,21 @@ def write_df_to_txt(df, performance_type, folder_path, date):
 
 
 
+def prepare_txt_pipeline(df_researcher, df_team, df_org, okr_excel_path):
+    df_researcher_dict = get_df_dict(df_researcher, ['研究员', '所属团队'], '路演指标', '路演次数')
+    df_team_dict = get_df_dict(df_team, ['所属团队'], '路演指标', '路演次数')
 
+    date = get_period_from_excel_name(okr_excel_path)
+    print(date)
+    # Write txts for df_researcher_dict
+    write_dict_to_txts(df_researcher_dict, '研究员绩效', txt_folder_path, date)
 
+    # Write txts for df_team_dict
+    write_dict_to_txts(df_team_dict, '团队绩效', txt_folder_path, date)
+
+    # Write txt for df_org
+    write_df_to_txt(df_org, '研究院绩效', txt_folder_path, date)
+
+    return
 
 
