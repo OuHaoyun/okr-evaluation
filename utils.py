@@ -193,7 +193,7 @@ def get_df_org(df_researcher):
         df_org = pd.concat([df_org, new_row], ignore_index=True)
 
     # Rename the columns of df_org
-    df_org = df_org.rename(columns={'Attribute': '汇总指标', 'Sum': '合计值'})
+    df_org = df_org.rename(columns={'Attribute': '绩效指标', 'Sum': '合计值'})
 
     return df_org
 
@@ -261,29 +261,54 @@ def write_dfs_to_excel(dfs_dict, okr_excel_path , engine='openpyxl'):
             df.to_excel(writer, sheet_name=sheet_name, index=False)
 
 
-def get_period_from_excel_name(excel_path):
-    """
-    Get the period from the excel name
-    """
-    year = int(excel_path.split('/')[-1].split('.')[0])
-    month = int(excel_path.split('/')[-1].split('.')[1])
-    
-    # Create a datetime object for the first day of the given month
-    date_obj = datetime.datetime(year, month, 1)
 
-    # Format the datetime object as a string in the "某年某月" format
-    year_month_str = date_obj.strftime('%Y年%m月')
+def get_period_from_excel_name(excel_path: str) -> str:
+    """
+    Extracts the year and month from the filename of an excel file and returns the result as a string
+    in the "某年某月" format
+    """
+    # Extract the year and month from the excel name
+    excel_filename = excel_path.split('/')[-1]
+    year, month = map(int, excel_filename.split('.')[:2])
+    
+    # Format the year and month as a string in the "某年某月" format
+    year_month_str = f"{year}年{month}月"
 
     return year_month_str
 
-def get_df_dict(df, id_vars, var_name, value_name):
+
+
+
+def get_df_dict(df: pd.DataFrame, id_vars: list, var_name: str, value_name: str) -> dict:
+    """
+    Melt a DataFrame and return a dictionary of DataFrames, with each DataFrame corresponding to a unique value of the
+    variable that was melted.
+
+    Args:
+        df: The DataFrame to melt.
+        id_vars: The columns to keep as is.
+        var_name: The name of the variable that will be melted.
+        value_name: The name of the value that will be melted. 
+
+    Returns:
+        A dictionary of DataFrames, with each DataFrame corresponding to a unique value of the variable that was melted.
+    """
     df_melt = df.melt(id_vars=id_vars, var_name=var_name, value_name=value_name)
     df_melt[value_name] = df_melt[value_name].astype(int)
     df_dict = {i: df_melt[df_melt[var_name] == i] for i in df_melt[var_name].unique()}
     return df_dict
 
-def clean_file_name(name):
+def clean_file_name(name: str) -> str:
+    """Clean up a file name by replacing problematic characters.
+    
+    Args:
+        name: The file name to clean up.
+    
+    Returns:
+        The cleaned file name.
+    """
     return name.replace('/', '-').replace(' ', '_').replace('(', '').replace(')', '')
+
 
 def write_dict_to_txts(data_dict, performance_type, folder_path, date):
     for key, value in data_dict.items():
