@@ -193,7 +193,7 @@ def get_df_org(df_researcher):
         df_org = pd.concat([df_org, new_row], ignore_index=True)
 
     # Rename the columns of df_org
-    df_org = df_org.rename(columns={'Attribute': '绩效指标', 'Sum': '合计值'})
+    df_org = df_org.rename(columns={'Attribute': '路演指标', 'Sum': '合计值'})
 
     return df_org
 
@@ -279,7 +279,7 @@ def get_period_from_excel_name(excel_path: str) -> str:
 
 
 
-def get_df_dict(df: pd.DataFrame, id_vars: list, var_name: str, value_name: str) -> dict:
+def get_df_dict(df: pd.DataFrame, id_vars: list, var_name: str, value_name: str, split_var: str) -> dict:
     """
     Melt a DataFrame and return a dictionary of DataFrames, with each DataFrame corresponding to a unique value of the
     variable that was melted.
@@ -295,7 +295,7 @@ def get_df_dict(df: pd.DataFrame, id_vars: list, var_name: str, value_name: str)
     """
     df_melt = df.melt(id_vars=id_vars, var_name=var_name, value_name=value_name)
     df_melt[value_name] = df_melt[value_name].astype(int)
-    df_dict = {i: df_melt[df_melt[var_name] == i] for i in df_melt[var_name].unique()}
+    df_dict = {i: df_melt[df_melt[split_var] == i] for i in df_melt[split_var].unique()}
     return df_dict
 
 def clean_file_name(name: str) -> str:
@@ -331,8 +331,8 @@ def write_df_to_txt(df, performance_type, folder_path, date):
 
 
 def prepare_txt_pipeline(df_researcher, df_team, df_org, okr_excel_path):
-    df_researcher_dict = get_df_dict(df_researcher, ['研究员', '所属团队'], '路演指标', '路演次数')
-    df_team_dict = get_df_dict(df_team, ['所属团队'], '路演指标', '路演次数')
+    df_researcher_dict = get_df_dict(df_researcher, ['研究员', '所属团队'], '路演指标', '路演次数' , '研究员')
+    df_team_dict = get_df_dict(df_team, ['所属团队'], '路演指标', '路演次数', '所属团队')
 
     date = get_period_from_excel_name(okr_excel_path)
     print(date)
