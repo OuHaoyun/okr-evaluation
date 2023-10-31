@@ -13,6 +13,7 @@ def read_roadshow_files(okr_excel_path: str, salesperson_info_excel_path: str) -
     df_salespeople_info = pd.read_excel(salesperson_info_excel_path)
     return df_okr, df_salespeople_info
 
+
 def print_na_rate(df: pd.DataFrame) -> None:
     """Print the rate of NA values in a DataFrame."""
     print('The na rate of the DataFrame is:')
@@ -20,7 +21,7 @@ def print_na_rate(df: pd.DataFrame) -> None:
 
 
 def get_researcher_columns(df: pd.DataFrame) -> list:
-    """ """
+    """Return the columns contains researcher information."""
     researcher_columns = []
     for col in df.columns:
         if '研究员' in col:
@@ -189,7 +190,7 @@ def calculate_org_okr(df_researcher: pd.DataFrame) -> pd.DataFrame:
     return df_org
 
 
-def okr_calculation_pipeline(df_okr, df_salespeople_info):
+def okr_calculation_pipeline(df_okr: pd.DataFrame, df_salespeople_info: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Main pipeline for OKR calculations."""
     sales_name_list = get_sales_name_list(df_salespeople_info)
     df_roadshow, df_special = transform_roadshow_data(df_okr, sales_name_list)
@@ -198,12 +199,11 @@ def okr_calculation_pipeline(df_okr, df_salespeople_info):
     df_org = calculate_org_okr(df_researcher)
     return df_roadshow, df_researcher, df_team, df_org, df_special
 
-
 # ------------------------------------------- #
 # Data Output                                 #
 # ------------------------------------------- #
 
-def compose_output_file_name(okr_excel_path: str) -> str:
+def compose_output_file_name(okr_excel_path: str, output_folder_path: str) -> str:
     """Generate the output file name based on the OKR Excel file name."""
     # Get the file name from the OKR Excel file path
     okr_excel_file_name = okr_excel_path.split('/')[-1]
@@ -246,14 +246,7 @@ def get_period_from_excel_name(excel_path: str) -> str:
 
 
 def clean_file_name(name: str) -> str:
-    """Clean up a file name by replacing problematic characters.
-    
-    Args:
-        name: The file name to clean up.
-    
-    Returns:
-        The cleaned file name.
-    """
+    """Clean up a file name by replacing problematic characters."""
     return name.replace('/', '-').replace(' ', '_').replace('(', '').replace(')', '')
 
 
@@ -279,12 +272,11 @@ def write_df_to_txt(df: pd.DataFrame, performance_type: str, folder_path: str, d
         file.write(df.to_string(index=False))
 
 
-def prepare_txt_pipeline(df_researcher, df_team, df_org, okr_excel_path):
+def prepare_txt_pipeline(df_researcher: pd.DataFrame, df_team: pd.DataFrame, df_org: pd.DataFrame, okr_excel_path: str) -> None:
     """Main pipeline for preparing text files."""
     df_researcher_dict = get_df_dict(df_researcher, ['研究员', '所属团队'], '路演指标', '路演次数' , '研究员')
     df_team_dict = get_df_dict(df_team, ['所属团队'], '路演指标', '路演次数', '所属团队')
     date = get_period_from_excel_name(okr_excel_path)
-    print(date)
     # Write txts for df_researcher_dict
     write_dict_to_txts(df_researcher_dict, '研究员绩效', txt_folder_path, date)
     # Write txts for df_team_dict
