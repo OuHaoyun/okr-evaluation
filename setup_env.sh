@@ -13,9 +13,14 @@ else
 fi
 
 # Activate the environment
-source activate $ENV_NAME
+conda activate $ENV_NAME
 
 # Install the required packages
-while read requirement; do conda install --yes $requirement; done < requirements.txt
+while read requirement; do 
+    if [[ ! $requirement =~ ^# && ! -z $requirement ]]; then
+        conda install --yes $requirement
+    fi
+done < requirements.txt
 
 echo "Setup complete. Activate the environment using: conda activate $ENV_NAME"
+
