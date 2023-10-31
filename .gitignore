@@ -22,3 +22,7 @@ Thumbs.db
 
 # Virtual Environment
 venv/
+
+# VSCode specific
+.vscode/
+okr-evaluation.code-workspace
