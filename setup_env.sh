@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Name of the environment
-ENV_NAME="okr-evaluation-venv"
+ENV_NAME="okr-evaluation"
 
 # Check if the environment already exists
 if conda info --envs | grep -q $ENV_NAME; then
