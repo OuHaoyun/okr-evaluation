@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 from typing import Tuple, Dict
-from constants import output_folder_path, txt_folder_path
+from constants import OUTPUT_FOLDER_PATH, TXT_FOLDER_PATH
 
 # ------------------------------------------- #
 # Data Cleaning and EDA                       #
@@ -203,7 +203,7 @@ def okr_calculation_pipeline(df_okr: pd.DataFrame, df_salespeople_info: pd.DataF
 # Data Output                                 #
 # ------------------------------------------- #
 
-def compose_output_file_name(okr_excel_path: str, output_folder_path: str) -> str:
+def compose_output_file_name(okr_excel_path: str, OUTPUT_FOLDER_PATH: str) -> str:
     """Generate the output file name based on the OKR Excel file name."""
     # Get the file name from the OKR Excel file path
     okr_excel_file_name = okr_excel_path.split('/')[-1]
@@ -213,13 +213,13 @@ def compose_output_file_name(okr_excel_path: str, output_folder_path: str) -> st
     # Compose the output file name
     output_file_name = f'okr_roadshow_{year}{month}.xlsx'
     # Compose the output file path
-    output_file_path = output_folder_path + output_file_name
+    output_file_path = OUTPUT_FOLDER_PATH + output_file_name
     return output_file_path
 
 
 def write_dfs_to_excel(dfs_dict: Dict[str, pd.DataFrame], okr_excel_path: str, engine='openpyxl') -> None:
     """Write multiple DataFrames to an Excel file."""
-    output_path = compose_output_file_name(okr_excel_path, output_folder_path)
+    output_path = compose_output_file_name(okr_excel_path, OUTPUT_FOLDER_PATH)
     if not dfs_dict:
         raise ValueError("No DataFrames provided to write to Excel.")
     with pd.ExcelWriter(output_path, engine=engine) as writer:
@@ -278,11 +278,11 @@ def prepare_txt_pipeline(df_researcher: pd.DataFrame, df_team: pd.DataFrame, df_
     df_team_dict = get_df_dict(df_team, ['所属团队'], '路演指标', '路演次数', '所属团队')
     date = get_period_from_excel_name(okr_excel_path)
     # Write txts for df_researcher_dict
-    write_dict_to_txts(df_researcher_dict, '研究员绩效', txt_folder_path, date)
+    write_dict_to_txts(df_researcher_dict, '研究员绩效', TXT_FOLDER_PATH, date)
     # Write txts for df_team_dict
-    write_dict_to_txts(df_team_dict, '团队绩效', txt_folder_path, date)
+    write_dict_to_txts(df_team_dict, '团队绩效', TXT_FOLDER_PATH, date)
     # Write txt for df_org
-    write_df_to_txt(df_org, '研究院绩效', txt_folder_path, date)
+    write_df_to_txt(df_org, '研究院绩效', TXT_FOLDER_PATH, date)
     return
 
 

@@ -1,26 +1,28 @@
 import os
 import datetime
+
+# Current timestamp for dynamic folder naming
 now = datetime.datetime.now()
 
-# --------------------------- # 
-# Input Data Paths            #
-# --------------------------- #
-data_folder_path = '/Users/haoyunou/Desktop/ms-security/研究院绩效考核/2023Q1&Q2研究院工作量统计/'
-researcher_info_excel_path = '/Users/haoyunou/Desktop/ms-security/研究院绩效考核/分析师列表（修正版）.xlsx'
-salesperson_info_excel_path = '/Users/haoyunou/Desktop/ms-security/研究院绩效考核/销售列表.xlsx'
-# okr_excel_path = '/Users/haoyunou/Desktop/ms-security/研究院绩效考核/2023Q1&Q2研究院工作量统计/2023.5.1-5.31研究院工作量统计0607.xlsx'
+# Base paths for clarity and ease of modification
+BASE_PATH = '/Users/haoyunou/Desktop/ms-security/研究院绩效考核/'
+OUTPUT_BASE_PATH = os.path.join(BASE_PATH, 'exp-data')
 
-
+# ----------------- # 
+# Input Data Paths  #
+# ----------------- #
+DATA_FOLDER_PATH = os.path.join(BASE_PATH, '2023Q1&Q2研究院工作量统计/')
+RESEARCHER_INFO_EXCEL_PATH = os.path.join(BASE_PATH, '分析师列表（修正版）.xlsx')
+SALESPERSON_INFO_EXCEL_PATH = os.path.join(BASE_PATH, '销售列表.xlsx')
 
 # ----------------- # 
 # Output Data Path  #
 # ----------------- #
-output_folder_path = '/Users/haoyunou/Desktop/ms-security/研究院绩效考核/exp-data/'
-output_excel_path = '/Users/haoyunou/Desktop/ms-security/研究院绩效考核/exp-data/okr_roadshow_202305.xlsx'
+OUTPUT_FOLDER_PATH = OUTPUT_BASE_PATH
+TXT_FOLDER = os.path.join(OUTPUT_BASE_PATH, 'roadshow_txts')
+TXT_FOLDER_PATH = os.path.join(TXT_FOLDER, now.strftime("%Y-%m-%d_%H-%M-%S"))
 
-txt_folder = '/Users/haoyunou/Desktop/ms-security/研究院绩效考核/exp-data/roadshow_txts/'
-txt_folder_path = txt_folder + now.strftime("%Y-%m-%d_%H-%M-%S") + '/'
-# Create the path if it doesn't exist
-if not os.path.exists(txt_folder_path):
-    os.makedirs(txt_folder_path)
+# Ensure the output path exists
+if not os.path.exists(TXT_FOLDER_PATH):
+    os.makedirs(TXT_FOLDER_PATH)
 

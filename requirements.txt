@@ -1,4 +1,6 @@
-pandas
-openpyxl
-ipykernel
+# This file may be used to create an environment using:
+# $ conda create --name <env> --file <this file>
+pandas==2.0.3
+openpyxl==3.0.10
+# ipykernel==6.25.2
 
