@@ -1,34 +1,26 @@
 import os
 import pandas as pd
+from typing import Tuple, Dict
 from constants import output_folder_path, txt_folder_path
 
 # ------------------------------------------- #
-# Step 1: Clean datasets and EDA              #
+# Data Cleaning and EDA                       #
 # ------------------------------------------- #
 
-def read_roadshow_files(okr_excel_path, salesperson_info_excel_path):
+def read_roadshow_files(okr_excel_path: str, salesperson_info_excel_path: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """Read the roadshow files and return them as DataFrames."""
     df_okr = pd.read_excel(okr_excel_path, sheet_name='路演', engine='openpyxl')
     df_salespeople_info = pd.read_excel(salesperson_info_excel_path)
-
     return df_okr, df_salespeople_info
 
-
 def print_na_rate(df: pd.DataFrame) -> None:
-    """
-    Print the na rate of a DataFrame
-    :param df: the DataFrame
-    :return: None
-    """
+    """Print the rate of NA values in a DataFrame."""
     print('The na rate of the DataFrame is:')
     print(df.isna().sum() / len(df))
 
 
 def get_researcher_columns(df: pd.DataFrame) -> list:
-    """
-    Get the columns contains '研究员'
-    :param df: the DataFrame
-    :return: the columns contains '研究员'
-    """
+    """ """
     researcher_columns = []
     for col in df.columns:
         if '研究员' in col:
@@ -37,21 +29,12 @@ def get_researcher_columns(df: pd.DataFrame) -> list:
 
 
 def get_sales_name_list(df: pd.DataFrame) -> list:
-    """
-    Get the sales name list
-    :param df: the DataFrame of the salesperson sheet
-    :return: the sales name list
-    """
-    sales_name_list = df['员工姓名'].tolist()
-    return sales_name_list
+    """Return the list of sales names from a DataFrame."""
+    return df['员工姓名'].tolist()
 
 
 def treat_empty_xuhao(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Treat the empty values in '序号'
-    :param df: the DataFrame
-    :return: the DataFrame with no empty values in '序号'
-    """
+    """Handle empty values in the '序号' column."""
     special_list = []
     df_special = pd.DataFrame()
 
@@ -78,33 +61,21 @@ def treat_empty_xuhao(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def treat_special_researcher(df: pd.DataFrame, sales_name_list) -> pd.DataFrame:
-    """
-    Treat the special values in '研究员'
-    :param df: the DataFrame
-    :return: the DataFrame with no special values in '研究员'
-    """
+    """Handle special values in the '研究员' column."""
     # special case 1
     df_temp = df[df['研究员'].str.contains('无研究员') == False].copy()
-    # # special case 2
-    # df_temp.loc[df_temp['研究员'].str.contains('胡又文'), '研究员'] = '所长'
-    # # write ‘所长’ in the column of '所属团队'
+    # special case 2: write ‘所长’ in the column of '所属团队'
     df_temp.loc[df_temp['研究员'] == '胡又文', '所属团队'] = '所长'
-    
     # special case 3
     df_temp = df_temp[df_temp['研究员'].isin(sales_name_list) == False].copy()
     return df_temp
 
 # ------------------------------------------- #
-# Step 2: Transform the unstructure Excel manuscript to a structured dataframe
-# Save the special cases into additional dataframe for future validation            #
+# Data Transformation                         #
 # ------------------------------------------- #
 
-def get_df_roadshow(df: pd.DataFrame, sales_name_list = None) -> pd.DataFrame:
-    """
-    Get the roadshow DataFrame
-    :param df: the DataFrame of the roadshow sheet
-    :return: the roadshow DataFrame
-    """
+def transform_roadshow_data(df: pd.DataFrame, sales_name_list=None) -> pd.DataFrame:
+    """Transform the roadshow data into a structured format."""
     # Define roadshow columns
     service_columns = ['序号', '服务事项', '客户机构', '客户分级', '客户区域', '所属团队']
     researcher_columns = get_researcher_columns(df)
@@ -136,10 +107,11 @@ def get_df_roadshow(df: pd.DataFrame, sales_name_list = None) -> pd.DataFrame:
     return df_roadshow, df_special
 
 # ------------------------------------------- #
-# Step 3: Calculate the okr for researchers, teams, and the orgnization            #
+# OKR Calculations                            #
 # ------------------------------------------- #
 
-def get_df_researcher(df_roadshow):
+def calculate_researcher_okr(df_roadshow: pd.DataFrame) -> pd.DataFrame:
+    """Calculate OKR for researchers."""
     # 1. Modify the df_researcher DataFrame structure
     df_researcher = df_roadshow.drop_duplicates(subset='研究员')[['研究员', '所属团队']].reset_index(drop=True)
 
@@ -170,7 +142,8 @@ def get_df_researcher(df_roadshow):
     return df_researcher
 
 
-def get_df_team(df_roadshow):
+def calculate_team_okr(df_roadshow: pd.DataFrame) -> pd.DataFrame:
+    """Calculate OKR for teams."""
     # drop duplicates for df_roadshow based on '序号'
     df_unique = df_roadshow.drop_duplicates(subset=['序号'], keep='first')
 
@@ -195,7 +168,8 @@ def get_df_team(df_roadshow):
     return df_team
 
 
-def get_df_org(df_researcher):
+def calculate_org_okr(df_researcher: pd.DataFrame) -> pd.DataFrame:
+    """Calculate OKR for the organization."""
     df_org = pd.DataFrame()
 
     # Get the numeric columns by excluding the first two columns
@@ -216,29 +190,21 @@ def get_df_org(df_researcher):
 
 
 def okr_calculation_pipeline(df_okr, df_salespeople_info):
+    """Main pipeline for OKR calculations."""
     sales_name_list = get_sales_name_list(df_salespeople_info)
-    df_roadshow, df_special = get_df_roadshow(df_okr, sales_name_list)
-    df_researcher = get_df_researcher(df_roadshow)
-    df_team = get_df_team(df_roadshow)
-    df_org = get_df_org(df_researcher)
-
+    df_roadshow, df_special = transform_roadshow_data(df_okr, sales_name_list)
+    df_researcher = calculate_researcher_okr(df_roadshow)
+    df_team = calculate_team_okr(df_roadshow)
+    df_org = calculate_org_okr(df_researcher)
     return df_roadshow, df_researcher, df_team, df_org, df_special
 
 
-
 # ------------------------------------------- #
-# Step 4 (Optional): Save cleansed okr data to Excel     #
+# Data Output                                 #
 # ------------------------------------------- #
 
-def compose_output_file_name(okr_excel_path, output_folder_path):
-    """
-    Compose the output file name based on the OKR Excel file name.
-    # retrieve the year and month from the okr_excel_path
-    # compose the output file name
-
-    :param okr_excel_path: the path of the OKR Excel file
-    :return: the output file name
-    """
+def compose_output_file_name(okr_excel_path: str) -> str:
+    """Generate the output file name based on the OKR Excel file name."""
     # Get the file name from the OKR Excel file path
     okr_excel_file_name = okr_excel_path.split('/')[-1]
     # Get the year and month from the file name
@@ -251,45 +217,18 @@ def compose_output_file_name(okr_excel_path, output_folder_path):
     return output_file_path
 
 
-def write_dfs_to_excel(dfs_dict, okr_excel_path , engine='openpyxl'):
-    """
-    Write DataFrames to Excel
-    :param dfs_dict: the dictionary of DataFrames
-    :param output_path: the output path
-    :param engine: the engine to write Excel
-    :return: None
-    """
-
+def write_dfs_to_excel(dfs_dict: Dict[str, pd.DataFrame], okr_excel_path: str, engine='openpyxl') -> None:
+    """Write multiple DataFrames to an Excel file."""
     output_path = compose_output_file_name(okr_excel_path, output_folder_path)
-
-    # dfs_dict = {name[3:]: globals()[name] for name in SHEET_NAMES if name in globals()}
-
     if not dfs_dict:
         raise ValueError("No DataFrames provided to write to Excel.")
-    
     with pd.ExcelWriter(output_path, engine=engine) as writer:
         for sheet_name, df in dfs_dict.items():
             df.to_excel(writer, sheet_name=sheet_name, index=False)
 
 
-# ------------------------------------------- #
-# Step 6: Write okrs into separated txt files  #
-# ------------------------------------------- #
-
 def get_df_dict(df: pd.DataFrame, id_vars: list, var_name: str, value_name: str, split_var: str) -> dict:
-    """
-    Melt a DataFrame and return a dictionary of DataFrames, with each DataFrame corresponding to a unique value of the
-    variable that was melted.
-
-    Args:
-        df: The DataFrame to melt.
-        id_vars: The columns to keep as is.
-        var_name: The name of the variable that will be melted.
-        value_name: The name of the value that will be melted. 
-
-    Returns:
-        A dictionary of DataFrames, with each DataFrame corresponding to a unique value of the variable that was melted.
-    """
+    """Melt a DataFrame and return a dictionary of DataFrames."""
     df_melt = df.melt(id_vars=id_vars, var_name=var_name, value_name=value_name)
     df_melt[value_name] = df_melt[value_name].astype(int)
     df_dict = {i: df_melt[df_melt[split_var] == i] for i in df_melt[split_var].unique()}
@@ -297,18 +236,14 @@ def get_df_dict(df: pd.DataFrame, id_vars: list, var_name: str, value_name: str,
 
 
 def get_period_from_excel_name(excel_path: str) -> str:
-    """
-    Extracts the year and month from the filename of an excel file and returns the result as a string
-    in the "某年某月" format
-    """
+    """Extract the year and month from an Excel file name."""
     # Extract the year and month from the excel name
     excel_filename = excel_path.split('/')[-1]
     year, month = map(int, excel_filename.split('.')[:2])
-    
     # Format the year and month as a string in the "某年某月" format
     year_month_str = f"{year}年{month}月"
-
     return year_month_str
+
 
 def clean_file_name(name: str) -> str:
     """Clean up a file name by replacing problematic characters.
@@ -322,7 +257,8 @@ def clean_file_name(name: str) -> str:
     return name.replace('/', '-').replace(' ', '_').replace('(', '').replace(')', '')
 
 
-def write_dict_to_txts(data_dict, performance_type, folder_path, date):
+def write_dict_to_txts(data_dict: Dict[str, pd.DataFrame], performance_type: str, folder_path: str, date: str) -> None:
+    """Write data from a dictionary of DataFrames to text files."""
     for key, value in data_dict.items():
         cleaned_key = clean_file_name(key)
         file_name = f'{performance_type}_{cleaned_key}_{date}.txt'
@@ -333,7 +269,8 @@ def write_dict_to_txts(data_dict, performance_type, folder_path, date):
             file.write(value.to_string(index=False))
 
 
-def write_df_to_txt(df, performance_type, folder_path, date):
+def write_df_to_txt(df: pd.DataFrame, performance_type: str, folder_path: str, date: str) -> None:
+    """Write a DataFrame to a text file."""
     file_name = f'{performance_type}_{date}.txt'
     file_path = os.path.join(folder_path, file_name)
     with open(file_path, 'w', encoding='utf-8') as file:
@@ -343,20 +280,17 @@ def write_df_to_txt(df, performance_type, folder_path, date):
 
 
 def prepare_txt_pipeline(df_researcher, df_team, df_org, okr_excel_path):
+    """Main pipeline for preparing text files."""
     df_researcher_dict = get_df_dict(df_researcher, ['研究员', '所属团队'], '路演指标', '路演次数' , '研究员')
     df_team_dict = get_df_dict(df_team, ['所属团队'], '路演指标', '路演次数', '所属团队')
-
     date = get_period_from_excel_name(okr_excel_path)
     print(date)
     # Write txts for df_researcher_dict
     write_dict_to_txts(df_researcher_dict, '研究员绩效', txt_folder_path, date)
-
     # Write txts for df_team_dict
     write_dict_to_txts(df_team_dict, '团队绩效', txt_folder_path, date)
-
     # Write txt for df_org
     write_df_to_txt(df_org, '研究院绩效', txt_folder_path, date)
-
     return
 
 

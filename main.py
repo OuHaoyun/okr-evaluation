@@ -32,8 +32,8 @@ def main(data_folder):
                         'organization': df_org
                         }
     
-            # Write the DataFrames to Excel
-            write_dfs_to_excel(dfs_dict, file_path)
+            # # Write the DataFrames to Excel
+            # write_dfs_to_excel(dfs_dict, file_path)
 
             # Write okrs in separate txt files
             prepare_txt_pipeline(df_researcher, df_team, df_org, file_path)
