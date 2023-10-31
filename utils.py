@@ -1,7 +1,17 @@
 import os
-import datetime
 import pandas as pd
 from constants import output_folder_path, txt_folder_path
+
+# ------------------------------------------- #
+# Step 1: Clean datasets and EDA              #
+# ------------------------------------------- #
+
+def read_roadshow_files(okr_excel_path, salesperson_info_excel_path):
+    df_okr = pd.read_excel(okr_excel_path, sheet_name='路演', engine='openpyxl')
+    df_salespeople_info = pd.read_excel(salesperson_info_excel_path)
+
+    return df_okr, df_salespeople_info
+
 
 def print_na_rate(df: pd.DataFrame) -> None:
     """
@@ -84,6 +94,10 @@ def treat_special_researcher(df: pd.DataFrame, sales_name_list) -> pd.DataFrame:
     df_temp = df_temp[df_temp['研究员'].isin(sales_name_list) == False].copy()
     return df_temp
 
+# ------------------------------------------- #
+# Step 2: Transform the unstructure Excel manuscript to a structured dataframe
+# Save the special cases into additional dataframe for future validation            #
+# ------------------------------------------- #
 
 def get_df_roadshow(df: pd.DataFrame, sales_name_list = None) -> pd.DataFrame:
     """
@@ -121,6 +135,9 @@ def get_df_roadshow(df: pd.DataFrame, sales_name_list = None) -> pd.DataFrame:
 
     return df_roadshow, df_special
 
+# ------------------------------------------- #
+# Step 3: Calculate the okr for researchers, teams, and the orgnization            #
+# ------------------------------------------- #
 
 def get_df_researcher(df_roadshow):
     # 1. Modify the df_researcher DataFrame structure
@@ -198,13 +215,6 @@ def get_df_org(df_researcher):
     return df_org
 
 
-def read_roadshow_files(okr_excel_path, salesperson_info_excel_path):
-    df_okr = pd.read_excel(okr_excel_path, sheet_name='路演', engine='openpyxl')
-    df_salespeople_info = pd.read_excel(salesperson_info_excel_path)
-
-    return df_okr, df_salespeople_info
-
-
 def okr_calculation_pipeline(df_okr, df_salespeople_info):
     sales_name_list = get_sales_name_list(df_salespeople_info)
     df_roadshow, df_special = get_df_roadshow(df_okr, sales_name_list)
@@ -216,7 +226,9 @@ def okr_calculation_pipeline(df_okr, df_salespeople_info):
 
 
 
-
+# ------------------------------------------- #
+# Step 4 (Optional): Save cleansed okr data to Excel     #
+# ------------------------------------------- #
 
 def compose_output_file_name(okr_excel_path, output_folder_path):
     """
@@ -237,7 +249,6 @@ def compose_output_file_name(okr_excel_path, output_folder_path):
     # Compose the output file path
     output_file_path = output_folder_path + output_file_name
     return output_file_path
-
 
 
 def write_dfs_to_excel(dfs_dict, okr_excel_path , engine='openpyxl'):
@@ -261,23 +272,9 @@ def write_dfs_to_excel(dfs_dict, okr_excel_path , engine='openpyxl'):
             df.to_excel(writer, sheet_name=sheet_name, index=False)
 
 
-
-def get_period_from_excel_name(excel_path: str) -> str:
-    """
-    Extracts the year and month from the filename of an excel file and returns the result as a string
-    in the "某年某月" format
-    """
-    # Extract the year and month from the excel name
-    excel_filename = excel_path.split('/')[-1]
-    year, month = map(int, excel_filename.split('.')[:2])
-    
-    # Format the year and month as a string in the "某年某月" format
-    year_month_str = f"{year}年{month}月"
-
-    return year_month_str
-
-
-
+# ------------------------------------------- #
+# Step 6: Write okrs into separated txt files  #
+# ------------------------------------------- #
 
 def get_df_dict(df: pd.DataFrame, id_vars: list, var_name: str, value_name: str, split_var: str) -> dict:
     """
@@ -297,6 +294,21 @@ def get_df_dict(df: pd.DataFrame, id_vars: list, var_name: str, value_name: str,
     df_melt[value_name] = df_melt[value_name].astype(int)
     df_dict = {i: df_melt[df_melt[split_var] == i] for i in df_melt[split_var].unique()}
     return df_dict
+
+
+def get_period_from_excel_name(excel_path: str) -> str:
+    """
+    Extracts the year and month from the filename of an excel file and returns the result as a string
+    in the "某年某月" format
+    """
+    # Extract the year and month from the excel name
+    excel_filename = excel_path.split('/')[-1]
+    year, month = map(int, excel_filename.split('.')[:2])
+    
+    # Format the year and month as a string in the "某年某月" format
+    year_month_str = f"{year}年{month}月"
+
+    return year_month_str
 
 def clean_file_name(name: str) -> str:
     """Clean up a file name by replacing problematic characters.
@@ -320,6 +332,7 @@ def write_dict_to_txts(data_dict, performance_type, folder_path, date):
             file.write(file_name.replace('.txt', '') + '\n')
             file.write(value.to_string(index=False))
 
+
 def write_df_to_txt(df, performance_type, folder_path, date):
     file_name = f'{performance_type}_{date}.txt'
     file_path = os.path.join(folder_path, file_name)
@@ -327,7 +340,6 @@ def write_df_to_txt(df, performance_type, folder_path, date):
         # Write the file name (without the .txt extension) as the first line of the text file
         file.write(file_name.replace('.txt', '') + '\n')
         file.write(df.to_string(index=False))
-
 
 
 def prepare_txt_pipeline(df_researcher, df_team, df_org, okr_excel_path):

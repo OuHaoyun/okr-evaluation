@@ -1,7 +1,5 @@
 import os
 # import pandas as pd
-
-
 from constants import data_folder_path, salesperson_info_excel_path
 from utils import read_roadshow_files, okr_calculation_pipeline, write_dfs_to_excel, prepare_txt_pipeline
 
@@ -23,7 +21,7 @@ def main(data_folder):
             # Read the OKR Excel file
             df_okr, df_salespeople_info = read_roadshow_files(file_path, salesperson_info_excel_path)
 
-            # calculate the OKR
+            # Calculate the OKR
             df_roadshow, df_researcher, df_team, df_org, df_special = okr_calculation_pipeline(df_okr, df_salespeople_info)
 
             dfs_dict = {
